@@ -1,5 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
+import json
 
 
 @dataclass
@@ -24,6 +25,13 @@ class Entry:
     end_period: int
     group: str
     sub_group: str = ""
+    is_absent: bool = False
 
     def is_practice_class(self) -> bool:
         return bool(self.sub_group)
+    
+    def to_json(self) -> str:
+        return json.dumps({
+            **asdict(self),
+            "date": self.date.timestamp()
+        })

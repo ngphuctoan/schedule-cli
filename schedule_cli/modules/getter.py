@@ -6,8 +6,7 @@ from requests import Response
 from bs4 import BeautifulSoup as Soup
 
 from .models import Entry, Semester
-
-DATE_FORMAT = "%d/%m/%Y"
+from .constants import DATE_FORMAT
 
 
 class LogInError(Exception):
@@ -36,11 +35,10 @@ class PostBackForm:
     
 
 def get_semesters() -> list[Semester]:
-    SEMESTER_API_URL = "https://thoikhoabieudukien.tdtu.edu.vn/API/XemKetQuaDangKy/LoadHocKy"
-
+    API_URL = "https://thoikhoabieudukien.tdtu.edu.vn/API/XemKetQuaDangKy/LoadHocKy"
     semesters = []
 
-    for semester_data in requests.get(SEMESTER_API_URL).json():
+    for semester_data in requests.get(API_URL).json():
         formatted_start_date = datetime.strptime(semester_data["sNgayBatDau"], DATE_FORMAT)
 
         semester = Semester(
@@ -57,7 +55,7 @@ def get_semesters() -> list[Semester]:
 
 
 class ScheduleGetter:
-    def __init__(self, student_id: str, password: str):
+    def __init__(self, student_id: str, password: str) -> None:
         self.session = requests.Session()
         self.auth = Auth(student_id, password)
         self.post_back_form = PostBackForm()
@@ -67,7 +65,6 @@ class ScheduleGetter:
         data = self.session.post(log_in_url, data=self.auth.to_form_data()).json()
         if data["result"] == "fail":
             raise LogInError()
-
         return self.session.get(data["url"])
     
     def _go_to(self, url: str) -> tuple[Response, Soup]:
@@ -103,7 +100,6 @@ class ScheduleGetter:
             event_target = "ThoiKhoaBieu1$radXemTKBTheoTuan"
             params = {"ThoiKhoaBieu1$radChonLua": "radXemTKBTheoTuan"}
             return self._post_back(response.url, event_target, params, soup)
-        
         return response, soup
     
     def _ensure_semester_selected(self, response: Response, soup: Soup, semester: Semester) -> tuple[Response, Soup]:
@@ -112,34 +108,32 @@ class ScheduleGetter:
             event_target = "ThoiKhoaBieu1$cboHocKy"
             params = {"ThoiKhoaBieu1$cboHocKy": semester.id_}
             return self._post_back(response.url, event_target, params, soup)
-        
         return response, soup
     
     def _parse_week_range(self, soup: Soup) -> tuple[datetime, datetime]:
         date_input = soup.find("input", id="ThoiKhoaBieu1_btnTuanHienTai")
         date_values = date_input["value"].split(" - ")
-        
         return tuple(datetime.strptime(date_value, DATE_FORMAT) for date_value in date_values)
 
-    def _go_to_week(self, response: Response, soup: Soup, current_date: datetime) -> tuple[Response, Soup]:
+    def _go_to_week(self, response: Response, soup: Soup, custom_date: datetime) -> tuple[Response, Soup]:
         start_date, end_date = self._parse_week_range(soup)
         
-        if start_date <= current_date <= end_date:
+        if start_date <= custom_date <= end_date:
             return response, soup
         
-        if current_date < start_date:
+        if custom_date < start_date:
             btn_suffix = "Truoc"
-            n_presses = (start_date - current_date).days // 7
+            n_presses = (start_date - custom_date).days // 7
         else:
             btn_suffix = "Sau"
-            n_presses = (start_date - end_date).days // 7
+            n_presses = (custom_date - end_date).days // 7
 
-        prev_start_date: datetime = None
+        prev_start_date = start_date
         for _ in range(n_presses):
             response, soup = self._post_back(response.url, "", {f"ThoiKhoaBieu1$btnTuan{btn_suffix}": ""})
-            
+
             start_date, end_date = self._parse_week_range(soup)
-            if start_date <= current_date <= end_date or prev_start_date == start_date:
+            if start_date <= custom_date <= end_date or prev_start_date == start_date:
                 break
             prev_start_date = start_date
             
@@ -157,32 +151,33 @@ class ScheduleGetter:
                 raw_data = item.decode_contents().split("<br/>")
                 entry_data = [Soup(raw_entry_data, "html.parser").text.strip() for raw_entry_data in raw_data]
 
-                entry_info_data = entry_data[2][1:-1]
-                entry_info_match = re.match("(?P<course_id>\\w*) - Nhóm\\|Groups: (?P<group>\\d*)(?: - Tổ\\|Sub-group: )?(?P<sub_group>\\d*)", entry_info_data)
+                entry_info = re.match(r"\((?P<course_id>\w*) - Nhóm\|Groups: (?P<group>\d*)(?: - Tổ\|Sub-group: )?(?P<sub_group>\d*)\)", entry_data[2])
+                n_periods = int(item["rowspan"])
 
                 entry = Entry(
+                    course_id=entry_info.group("course_id"),
                     course_name=entry_data[0],
-                    course_id=entry_info_match.group("course_id"),
-                    room=entry_data[3].split(": ")[1],
+                    room=entry_data[3].replace("Phòng|Room: ", ""),
                     date=start_date + timedelta(days=j),
                     start_period=i + 1,
-                    end_period=i + int(item["rowspan"]),
-                    group=entry_info_match.group("group"),
-                    sub_group=entry_info_match.group("sub_group")
+                    end_period=i + n_periods,
+                    group=entry_info.group("group"),
+                    sub_group=entry_info.group("sub_group"),
+                    is_absent="GV báo vắng" in entry_data
                 )
                 entries.append(entry)
 
         return entries
     
-    def get_week_schedule(self, semester: Semester, current_date: datetime = None) -> list[Entry]:
-        if current_date is None:
-            current_date = datetime.now()
+    def get_week_schedule(self, semester: Semester, custom_date: datetime = None) -> list[Entry]:
+        if custom_date is None:
+            custom_date = datetime.now()
         
         reponse, soup = self._go_to("https://lichhoc-lichthi.tdtu.edu.vn/tkb2.aspx")
         
         reponse, soup = self._ensure_week_view(reponse, soup)
-        reponse, soup = self._ensure_semester_selected(reponse, soup, semester=semester)
-        reponse, soup = self._go_to_week(reponse, soup, current_date=current_date)
+        reponse, soup = self._ensure_semester_selected(reponse, soup, semester)
+        reponse, soup = self._go_to_week(reponse, soup, custom_date)
 
         start_date, _ = self._parse_week_range(soup)
         return self._parse_entries(soup, start_date)

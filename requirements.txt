@@ -1,6 +1,0 @@
-requests
-keyring
-beautifulsoup4
-flake8
-click
-rich
