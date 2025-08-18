@@ -2,6 +2,14 @@
 
 Command-line interface to view and export week schedules.
 
+> [!WARNING]
+> - This is an unofficial project created out of personal interest. **Use at your own risk!**
+> - Do **NOT** use this tool to violate the university's guidelines, the author is not responsible for any misuse or consequences.
+> - The accuracy of the resulting data is not guaranteed and changes to the university's website may break this tool.
+
+> [!TIP]
+> Found any issue? [Create a new request!](https://github.com/ngphuctoan/schedule-cli/issues)
+
 ## Installation
 
 ### Releases
@@ -15,7 +23,7 @@ Clone the repository and install the necessary dependencies:
 ```bash
 git clone https://github.com/ngphuctoan/schedule-cli.git
 cd schedule-cli
-pip install . -e
+pip install -e .
 ```
 
 Using `-e` makes it editable so changes to the code are reflected immediately.
@@ -28,11 +36,14 @@ Fetch available semester(s):
 schedule-cli fetch-semesters
 ```
 
-Set log in credentials:
+Set login credentials:
 
 ```bash
 schedule-cli set-account --student-id STUDENT_ID --password PASSWORD
 ```
+
+> [!CAUTION]
+> Credentials are stored on your system using the `keyring` library. Please make sure to secure your computer with a password!
 
 View this week's schedule:
 
