@@ -146,7 +146,7 @@ class WeeklyScheduleGetter(BaseScheduleGetter):
         )
 
     def _calculate_week_presses(
-        start_date: datetime, end_date: datetime, custom_date: datetime
+        self, start_date: datetime, end_date: datetime, custom_date: datetime
     ) -> tuple[str, int]:
         if custom_date < start_date:
             btn_suffix = "Truoc"
