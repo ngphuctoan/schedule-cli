@@ -1,15 +1,29 @@
 [project]
 name = "schedule-cli"
 version = "0.1.0"
-description = "Command-line interface to view and export week schedules."
-requires-python = ">=3.10"
+readme = "README.md"
+requires-python = ">=3.13"
 dependencies = [
-    "beautifulsoup4>=4.13.4",
-    "click>=8.2.1",
-    "keyring>=25.6.0",
-    "requests>=2.32.4",
-    "rich>=14.1.0"
+    "beautifulsoup4 (>=4.13.4,<5.0.0)",
+    "click (>=8.2.1,<9.0.0)",
+    "keyring (>=25.6.0,<26.0.0)",
+    "requests (>=2.32.5,<3.0.0)",
+    "rich (>=14.1.0,<15.0.0)",
 ]
 
-[project.scripts]
-schedule-cli = "schedule_cli:cli"
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.9"
+
+[tool.poetry.scripts]
+schedule-cli = "schedule_cli.cli:cli"
+
+[tool.ruff]
+line-length = 320
+target-version = "py313"
+
+[tool.ruff.lint]
+ignore = ["E501"]

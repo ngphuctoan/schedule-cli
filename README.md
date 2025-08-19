@@ -3,6 +3,7 @@
 Command-line interface to view and export week schedules.
 
 > [!WARNING]
+>
 > - This is an unofficial project created out of personal interest. **Use at your own risk!**
 > - Do **NOT** use this tool to violate the university's guidelines, the author is not responsible for any misuse or consequences.
 > - The accuracy of the resulting data is not guaranteed and changes to the university's website may break this tool.
@@ -23,7 +24,7 @@ Clone the repository and install the necessary dependencies:
 ```bash
 git clone https://github.com/ngphuctoan/schedule-cli.git
 cd schedule-cli
-pip install -e .
+poetry install
 ```
 
 Using `-e` makes it editable so changes to the code are reflected immediately.
@@ -33,13 +34,13 @@ Using `-e` makes it editable so changes to the code are reflected immediately.
 Fetch available semester(s):
 
 ```bash
-schedule-cli fetch-semesters
+poetry run schedule-cli fetch-semesters
 ```
 
 Set login credentials:
 
 ```bash
-schedule-cli set-account --student-id STUDENT_ID --password PASSWORD
+poetry run schedule-cli set-account --student-id STUDENT_ID --password PASSWORD
 ```
 
 > [!CAUTION]
@@ -48,13 +49,13 @@ schedule-cli set-account --student-id STUDENT_ID --password PASSWORD
 View this week's schedule:
 
 ```bash
-schedule-cli view --semester-id SEMESTER_ID
+poetry run schedule-cli view --semester-id SEMESTER_ID
 ```
 
 Export schedule to `schedule.json` for a specified week:
 
-```
-schedule-cli export --semester-id SEMESTER_ID --custom-date DD/MM/YYYY --output ./schedule.json
+```bash
+poetry run schedule-cli export --semester-id SEMESTER_ID --custom-date DD/MM/YYYY --output ./schedule.json
 ```
 
 ## Todo

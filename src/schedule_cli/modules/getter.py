@@ -5,8 +5,8 @@ import requests
 from requests import Response
 from bs4 import BeautifulSoup as Soup
 
-from .models import Entry, Semester
-from .constants import DATE_FORMAT
+from schedule_cli.modules.constants import DATE_FORMAT
+from schedule_cli.modules.models import Entry, Semester
 
 
 class LogInError(Exception):
@@ -30,9 +30,9 @@ class PostBackForm:
     def to_form_data(self) -> dict:
         return {
             "__VIEWSTATE": self._viewstate,
-            "__VIEWSTATEGENERATOR": self._viewstategenerator
+            "__VIEWSTATEGENERATOR": self._viewstategenerator,
         }
-    
+
 
 def get_semesters() -> list[Semester]:
     API_URL = "https://thoikhoabieudukien.tdtu.edu.vn/API/XemKetQuaDangKy/LoadHocKy"
@@ -46,7 +46,7 @@ def get_semesters() -> list[Semester]:
             name=semester_data["TenHocKy"],
             term=semester_data["HocKy"],
             year=semester_data["NamHoc"],
-            start_date=formatted_start_date
+            start_date=formatted_start_date,
         )
         semesters.append(semester)
 
@@ -66,7 +66,7 @@ class ScheduleGetter:
         if data["result"] == "fail":
             raise LogInError()
         return self.session.get(data["url"])
-    
+
     def _go_to(self, url: str) -> tuple[Response, Soup]:
         response = self.session.get(url)
         if "Login" in response.url:
@@ -75,7 +75,7 @@ class ScheduleGetter:
 
         soup = Soup(response.content, "html.parser")
         return response, soup
-    
+
     def _post_back(self, url: str, event_target: str, params: dict, soup: Soup = None) -> tuple[Response, Soup]:
         if soup:
             self.post_back_form._viewstate = soup.find(id="__VIEWSTATE")["value"]
@@ -84,13 +84,13 @@ class ScheduleGetter:
         data = {
             "__EVENTTARGET": event_target,
             **self.post_back_form.to_form_data(),
-            **params
+            **params,
         }
         response = self.session.post(url, data=data)
         if "Login" in response.url:
             self._log_in(url)
             response = self.session.post(url, data=data)
-        
+
         soup = Soup(response.content, "html.parser")
         return response, soup
 
@@ -101,7 +101,7 @@ class ScheduleGetter:
             params = {"ThoiKhoaBieu1$radChonLua": "radXemTKBTheoTuan"}
             return self._post_back(response.url, event_target, params, soup)
         return response, soup
-    
+
     def _ensure_semester_selected(self, response: Response, soup: Soup, semester: Semester) -> tuple[Response, Soup]:
         semester_option = soup.find("option", value=str(semester.id_))
         if semester_option is None or not semester_option.has_attr("selected"):
@@ -109,7 +109,7 @@ class ScheduleGetter:
             params = {"ThoiKhoaBieu1$cboHocKy": semester.id_}
             return self._post_back(response.url, event_target, params, soup)
         return response, soup
-    
+
     def _parse_week_range(self, soup: Soup) -> tuple[datetime, datetime]:
         date_input = soup.find("input", id="ThoiKhoaBieu1_btnTuanHienTai")
         date_values = date_input["value"].split(" - ")
@@ -117,10 +117,10 @@ class ScheduleGetter:
 
     def _go_to_week(self, response: Response, soup: Soup, custom_date: datetime) -> tuple[Response, Soup]:
         start_date, end_date = self._parse_week_range(soup)
-        
+
         if start_date <= custom_date <= end_date:
             return response, soup
-        
+
         if custom_date < start_date:
             btn_suffix = "Truoc"
             n_presses = (start_date - custom_date).days // 7
@@ -136,9 +136,9 @@ class ScheduleGetter:
             if start_date <= custom_date <= end_date or prev_start_date == start_date:
                 break
             prev_start_date = start_date
-            
+
         return response, soup
-    
+
     def _parse_entries(self, soup: Soup, start_date: datetime) -> list[Entry]:
         week_table = soup.find("table", id="ThoiKhoaBieu1_tbTKBTheoTuan")
         entries = []
@@ -151,7 +151,10 @@ class ScheduleGetter:
                 raw_data = item.decode_contents().split("<br/>")
                 entry_data = [Soup(raw_entry_data, "html.parser").text.strip() for raw_entry_data in raw_data]
 
-                entry_info = re.match(r"\((?P<course_id>\w*) - Nhóm\|Groups: (?P<group>\d*)(?: - Tổ\|Sub-group: )?(?P<sub_group>\d*)\)", entry_data[2])
+                entry_info = re.match(
+                    r"\((?P<course_id>\w*) - Nhóm\|Groups: (?P<group>\d*)(?: - Tổ\|Sub-group: )?(?P<sub_group>\d*)\)",
+                    entry_data[2],
+                )
                 n_periods = int(item["rowspan"])
 
                 entry = Entry(
@@ -163,18 +166,18 @@ class ScheduleGetter:
                     end_period=i + n_periods,
                     group=entry_info.group("group"),
                     sub_group=entry_info.group("sub_group"),
-                    is_absent="GV báo vắng" in entry_data
+                    is_absent="GV báo vắng" in entry_data,
                 )
                 entries.append(entry)
 
         return entries
-    
+
     def get_week_schedule(self, semester: Semester, custom_date: datetime = None) -> list[Entry]:
         if custom_date is None:
             custom_date = datetime.now()
-        
+
         reponse, soup = self._go_to("https://lichhoc-lichthi.tdtu.edu.vn/tkb2.aspx")
-        
+
         reponse, soup = self._ensure_week_view(reponse, soup)
         reponse, soup = self._ensure_semester_selected(reponse, soup, semester)
         reponse, soup = self._go_to_week(reponse, soup, custom_date)

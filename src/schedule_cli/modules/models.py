@@ -29,9 +29,6 @@ class Entry:
 
     def is_practice_class(self) -> bool:
         return bool(self.sub_group)
-    
+
     def to_json(self) -> str:
-        return json.dumps({
-            **asdict(self),
-            "date": self.date.timestamp()
-        })
+        return json.dumps({**asdict(self), "date": self.date.timestamp()})
