@@ -21,7 +21,7 @@ from schedule_cli.modules.constants import DATE_FORMAT
 SERVICE_NAME = "schedule-cli"
 
 # Uncomment to test app in Vietnamese.
-locale.setlocale(locale.LC_ALL, "vi_VN")
+# locale.setlocale(locale.LC_ALL, "vi_VN")
 
 console = Console()
 semester_getter = SemesterGetter()
@@ -201,7 +201,7 @@ def view(
     for e in schedule.entries:
         table.add_row(
             e.course_id,
-            e.course_name,
+            e.course_name[lang.split("_")[0]],
             e.room,
             calendar.day_name[e.weekday],
             str(e.start_period),
@@ -239,12 +239,12 @@ def export(
         _("Schedule has been fetched! Exporting to %(path)s...") % {"path": output}
     )
 
-    with open(output, "x") as file:
-        try:
+    try:
+        with open(output, "x") as file:
             file.write(json.dumps(schedule.to_json()))
             log.info(_("Exported successfully!"))
-        except Exception:
-            log.exception(_("Failed to export."))
+    except Exception:
+        log.exception(_("Failed to export."))
 
 
 if __name__ == "__main__":

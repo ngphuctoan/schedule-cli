@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from typing import TypedDict
 
 
 @dataclass
@@ -19,9 +20,14 @@ class Semester:
         return data
 
 
+class CourseName(TypedDict):
+    en: str
+    vi: str
+
+
 @dataclass
 class Entry:
-    course_name: str
+    course_name: CourseName
     course_id: str
     room: str
     weekday: int

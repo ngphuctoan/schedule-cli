@@ -193,7 +193,7 @@ class WeeklyScheduleGetter(BaseScheduleGetter):
 
         return Entry(
             course_id=match.group("course_id"),
-            course_name=data[0] if lang == "vi_VN" else data[1].replace("|", ""),
+            course_name={"vi": data[0], "en": data[1].replace("|", "")},
             room=data[3].replace("Phòng|Room: ", ""),
             weekday=col + 1,
             start_period=row + 1,
