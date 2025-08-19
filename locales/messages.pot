@@ -1,0 +1,97 @@
+msgid "Your student ID."
+msgstr ""
+
+msgid "Your password."
+msgstr ""
+
+msgid "The semester ID."
+msgstr ""
+
+msgid ""
+"Any date within the specified week (format: DD/MM/YYYY) - Defaults to "
+"today."
+msgstr ""
+
+msgid "No account is set - Please run `%(command)s` first!"
+msgstr ""
+
+msgid "Using the provided account instead of local storage."
+msgstr ""
+
+msgid "Unknown semester ID: %(id)s - Use `%(command)s` to list all semesters."
+msgstr ""
+
+msgid "Found semester '%(name)s' - Fetching the schedule..."
+msgstr ""
+
+msgid "Invalid student ID or password!"
+msgstr ""
+
+msgid "Something went wrong."
+msgstr ""
+
+msgid "Fetch all semesters."
+msgstr ""
+
+msgid "Found %(count)d semesters - Displaying the table:"
+msgstr ""
+
+msgid "All semesters"
+msgstr ""
+
+msgid "ID"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Save your Student Portal account locally."
+msgstr ""
+
+msgid "Your account has been saved!"
+msgstr ""
+
+msgid "View the table of the schedule."
+msgstr ""
+
+msgid "Your schedule (%(start_date)s - %(end_date)s)"
+msgstr ""
+
+msgid "Course"
+msgstr ""
+
+msgid "Room"
+msgstr ""
+
+msgid "Weekday"
+msgstr ""
+
+msgid "Period"
+msgstr ""
+
+msgid "Duration"
+msgstr ""
+
+msgid "Group"
+msgstr ""
+
+msgid "Sub group"
+msgstr ""
+
+msgid "Is absent"
+msgstr ""
+
+msgid "Export the schedule as JSON."
+msgstr ""
+
+msgid "The specified file path. Must be non-existing."
+msgstr ""
+
+msgid "Schedule has been fetched! Exporting to %(path)s..."
+msgstr ""
+
+msgid "Exported successfully!"
+msgstr ""
+
+msgid "Failed to export."
+msgstr ""

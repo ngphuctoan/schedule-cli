@@ -1,11 +1,13 @@
-import calendar
-import gettext
-from datetime import datetime
 import json
+import locale
+import calendar
+from datetime import datetime
+
 import click
 import keyring
 from rich.table import Table
 from rich.console import Console
+from babel.support import Translations
 
 from schedule_cli.logger import log
 from schedule_cli.modules.getters import (
@@ -16,25 +18,33 @@ from schedule_cli.modules.getters import (
 from schedule_cli.modules.models import Schedule, Semester
 from schedule_cli.modules.constants import DATE_FORMAT
 
+locale.setlocale(locale.LC_ALL, "vi_VN")
+
 SERVICE_NAME = "schedule-cli"
+
 console = Console()
-_ = gettext.gettext
-_n = gettext.ngettext
 semester_getter = SemesterGetter()
+
+lang, _ = locale.getlocale()
+t = Translations.load(dirname="locales", locales=[lang])
+_ = t.gettext
+__ = t.ngettext
 
 
 def credential_option_student_id(required: bool = True):
     return click.option(
-        "--student-id", "-i", required=required, help=_("Your student ID")
+        "--student-id", "-i", required=required, help=_("Your student ID.")
     )
 
 
 def credential_option_password(required: bool = True):
-    return click.option("--password", "-p", required=required, help=_("Your password"))
+    return click.option("--password", "-p", required=required, help=_("Your password."))
 
 
 def schedule_option_semester_id():
-    return click.option("--semester-id", "-s", required=True, help=_("The semester ID"))
+    return click.option(
+        "--semester-id", "-s", required=True, help=_("The semester ID.")
+    )
 
 
 def schedule_option_custom_date():
@@ -42,7 +52,7 @@ def schedule_option_custom_date():
         "--custom-date",
         "-d",
         help=_(
-            "Any date within the specified week (format: DD/MM/YYYY) - Defaults to today"
+            "Any date within the specified week (format: DD/MM/YYYY) - Defaults to today."
         ),
     )
 
@@ -77,7 +87,7 @@ def find_week_schedule(
     if student_id is None or password is None:
         student_id, password = get_credentials_from_keychain()
     else:
-        log.info(_("Using the provided credentials instead of local storage"))
+        log.info(_("Using the provided account instead of local storage."))
 
     if student_id is None or password is None:
         return None
@@ -85,7 +95,7 @@ def find_week_schedule(
     semester = find_semester(semester_id)
     if semester is None:
         log.error(
-            _("Unknown semester ID: %(id)s - Use `%(command)s` to list all semesters")
+            _("Unknown semester ID: %(id)s - Use `%(command)s` to list all semesters.")
             % {"id": semester_id, "command": "fetch-semesters"}
         )
         return None
@@ -106,7 +116,7 @@ def find_week_schedule(
     except LogInError:
         log.error(_("Invalid student ID or password!"))
     except Exception:
-        log.exception(_("Something went wrong"))
+        log.exception(_("Something went wrong."))
 
 
 @click.group()
@@ -114,7 +124,7 @@ def cli() -> None:
     pass
 
 
-@cli.command(help=_("Fetch all semesters"))
+@cli.command(help=_("Fetch all semesters."))
 def fetch_semesters() -> None:
     semesters = semester_getter.get()
 
@@ -133,7 +143,7 @@ def fetch_semesters() -> None:
     console.print(table)
 
 
-@cli.command(help=_("Save your Student Portal credentials locally"))
+@cli.command(help=_("Save your Student Portal account locally."))
 @credential_option_student_id()
 @credential_option_password()
 def set_account(student_id: str, password: str) -> None:
@@ -142,7 +152,7 @@ def set_account(student_id: str, password: str) -> None:
     log.info(_("Your account has been saved!"))
 
 
-@cli.command(help=_("View the table of the schedule"))
+@cli.command(help=_("View the table of the schedule."))
 @schedule_option_semester_id()
 @schedule_option_custom_date()
 @credential_option_student_id(required=False)
@@ -156,9 +166,10 @@ def view(
     schedule = find_week_schedule(semester_id, custom_date, student_id, password)
     if schedule is None:
         return
+
     log.info(
-        _n(
-            "Found %(count)d entry - Displaying the table:",
+        __(
+            "Found 1 entry - Displaying the table:",
             "Found %(count)d entries - Displaying the table:",
             n=len(schedule.entries),
         )
@@ -175,7 +186,7 @@ def view(
     table.add_column(_("ID"))
     table.add_column(_("Course"))
     table.add_column(_("Room"))
-    table.add_column(_("Date"))
+    table.add_column(_("Weekday"))
     table.add_column(_("Period"), justify="right")
     table.add_column(_("Duration"), justify="right")
     table.add_column(_("Group"), justify="right")
@@ -198,14 +209,14 @@ def view(
     console.print(table)
 
 
-@cli.command(help=_("Export the schedule as JSON"))
+@cli.command(help=_("Export the schedule as JSON."))
 @schedule_option_semester_id()
 @schedule_option_custom_date()
 @click.option(
     "--output",
     "-o",
     required=True,
-    help=_("The specified file path. Must be non-existing"),
+    help=_("The specified file path. Must be non-existing."),
 )
 @credential_option_student_id(required=False)
 @credential_option_password(required=False)
@@ -228,7 +239,7 @@ def export(
             file.write(json.dumps(schedule.to_json()))
             log.info(_("Exported successfully!"))
         except Exception:
-            log.exception(_("Failed to export"))
+            log.exception(_("Failed to export."))
 
 
 if __name__ == "__main__":
