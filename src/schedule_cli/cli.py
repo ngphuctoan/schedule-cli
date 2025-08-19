@@ -1,19 +1,26 @@
+import calendar
 import gettext
 from datetime import datetime
+import json
 import click
 import keyring
 from rich.table import Table
 from rich.console import Console
 
 from schedule_cli.logger import log
-from schedule_cli.modules.getter import ScheduleGetter, get_semesters, LogInError
-from schedule_cli.modules.models import Entry, Semester
+from schedule_cli.modules.getters import (
+    SemesterGetter,
+    WeeklyScheduleGetter,
+    LogInError,
+)
+from schedule_cli.modules.models import Schedule, Semester
 from schedule_cli.modules.constants import DATE_FORMAT
 
 SERVICE_NAME = "schedule-cli"
 console = Console()
 _ = gettext.gettext
 _n = gettext.ngettext
+semester_getter = SemesterGetter()
 
 
 def credential_option_student_id(required: bool = True):
@@ -55,7 +62,7 @@ def get_credentials_from_keychain() -> tuple[str, str] | tuple[None, None]:
 
 
 def find_semester(semester_id: str) -> Semester | None:
-    for semester in get_semesters():
+    for semester in semester_getter.get():
         if str(semester.id_) == semester_id:
             return semester
     return None
@@ -66,7 +73,7 @@ def find_week_schedule(
     custom_date: str | None,
     student_id: str | None,
     password: str | None,
-) -> list[Entry | None] | None:
+) -> Schedule | None:
     if student_id is None or password is None:
         student_id, password = get_credentials_from_keychain()
     else:
@@ -87,7 +94,7 @@ def find_week_schedule(
         _("Found semester '%(name)s' - Fetching the schedule...")
         % {"name": str(semester)}
     )
-    getter = ScheduleGetter(student_id, password)
+    getter = WeeklyScheduleGetter(student_id, password)
 
     if custom_date is not None:
         formatted_date = datetime.strptime(custom_date, DATE_FORMAT)
@@ -95,7 +102,7 @@ def find_week_schedule(
         formatted_date = None
 
     try:
-        return getter.get_week_schedule(semester, formatted_date)
+        return getter.get(semester, formatted_date)
     except LogInError:
         log.error(_("Invalid student ID or password!"))
     except Exception:
@@ -109,7 +116,8 @@ def cli() -> None:
 
 @cli.command(help=_("Fetch all semesters"))
 def fetch_semesters() -> None:
-    semesters = get_semesters()
+    semesters = semester_getter.get()
+
     log.info(
         _("Found %(count)d semesters - Displaying the table:")
         % {"count": len(semesters)}
@@ -152,32 +160,38 @@ def view(
         _n(
             "Found %(count)d entry - Displaying the table:",
             "Found %(count)d entries - Displaying the table:",
-            n=len(schedule),
+            n=len(schedule.entries),
         )
-        % {"count": len(schedule)}
+        % {"count": len(schedule.entries)}
     )
 
-    table = Table(title=_("Your schedule"))
+    table = Table(
+        title=_("Your schedule (%(start_date)s - %(end_date)s)")
+        % {
+            "start_date": schedule.start_date.strftime(DATE_FORMAT),
+            "end_date": schedule.end_date.strftime(DATE_FORMAT),
+        }
+    )
     table.add_column(_("ID"))
     table.add_column(_("Course"))
     table.add_column(_("Room"))
     table.add_column(_("Date"))
-    table.add_column(_("Start period"), justify="right")
-    table.add_column(_("End period"), justify="right")
+    table.add_column(_("Period"), justify="right")
+    table.add_column(_("Duration"), justify="right")
     table.add_column(_("Group"), justify="right")
     table.add_column(_("Sub group"), justify="right")
     table.add_column(_("Is absent"), justify="center", style="red")
 
-    for e in schedule:
+    for e in schedule.entries:
         table.add_row(
             e.course_id,
             e.course_name,
             e.room,
-            datetime.strftime(e.date, DATE_FORMAT),
+            calendar.day_name[e.weekday],
             str(e.start_period),
-            str(e.end_period),
+            str(e.n_periods),
             e.group,
-            e.sub_group,
+            e.sub_group or "-",
             "✓" if e.is_absent else "",
         )
 
@@ -211,7 +225,7 @@ def export(
 
     with open(output, "x") as file:
         try:
-            file.write(f"[{','.join([e.to_json() for e in schedule])}]")
+            file.write(json.dumps(schedule.to_json()))
             log.info(_("Exported successfully!"))
         except Exception:
             log.exception(_("Failed to export"))
