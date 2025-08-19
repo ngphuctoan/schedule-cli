@@ -1,97 +1,159 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-08-19 19:40+0700\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.6\n"
+
+#: src/schedule_cli/cli.py:28
 msgid "Your student ID."
 msgstr "Mã sinh viên của bạn."
 
+#: src/schedule_cli/cli.py:33
 msgid "Your password."
 msgstr "Mật khẩu của bạn."
 
+#: src/schedule_cli/cli.py:38
 msgid "The semester ID."
 msgstr "ID học kỳ."
 
+#: src/schedule_cli/cli.py:47
 msgid ""
-"Any date within the specified week (format: DD/MM/YYYY) - Defaults to "
-"today."
-msgstr "Bất kỳ ngày nào trong tuần được chỉ định (định dạng: DD/MM/YYYY) - Mặc định là hôm nay."
+"Any date within the specified week (format: DD/MM/YYYY) - Defaults to today."
+msgstr ""
+"Bất kỳ ngày nào trong tuần được chỉ định (định dạng: DD/MM/YYYY) - Mặc định "
+"là hôm nay."
 
+#: src/schedule_cli/cli.py:58
+#, python-format
 msgid "No account is set - Please run `%(command)s` first!"
 msgstr "Chưa thiết lập tài khoản - Vui lòng chạy `%(command)s` trước!"
 
+#: src/schedule_cli/cli.py:82
 msgid "Using the provided account instead of local storage."
-msgstr "Sử dụng tài khoản được cung cấp thay vì lưu trữ"
+msgstr "Sử dụng tài khoản được cung cấp thay vì lưu trữ."
 
+#: src/schedule_cli/cli.py:90
+#, python-format
 msgid "Unknown semester ID: %(id)s - Use `%(command)s` to list all semesters."
-msgstr "ID học kỳ không xác định: %(id)s - Sử dụng `%(command)s` để xem tất cả học kỳ"
+msgstr ""
+"ID học kỳ không xác định: %(id)s - Sử dụng `%(command)s` để xem tất cả học "
+"kỳ."
 
+#: src/schedule_cli/cli.py:96
+#, python-format
 msgid "Found semester '%(name)s' - Fetching the schedule..."
 msgstr "Đã tìm thấy học kỳ '%(name)s' - Đang lấy thời khóa biểu..."
 
+#: src/schedule_cli/cli.py:109
 msgid "Invalid student ID or password!"
 msgstr "Mã sinh viên hoặc mật khẩu không hợp lệ!"
 
+#: src/schedule_cli/cli.py:111
 msgid "Something went wrong."
 msgstr "Có lỗi xảy ra."
 
+#: src/schedule_cli/cli.py:119
 msgid "Fetch all semesters."
 msgstr "Lấy tất cả học kỳ."
 
+#: src/schedule_cli/cli.py:124
+#, python-format
 msgid "Found %(count)d semesters - Displaying the table:"
 msgstr "Đã tìm thấy %(count)d học kỳ - Hiển thị bảng:"
 
+#: src/schedule_cli/cli.py:128
 msgid "All semesters"
 msgstr "Tất cả học kỳ"
 
+#: src/schedule_cli/cli.py:129 src/schedule_cli/cli.py:178
 msgid "ID"
 msgstr "ID"
 
+#: src/schedule_cli/cli.py:130
 msgid "Name"
 msgstr "Tên"
 
+#: src/schedule_cli/cli.py:138
 msgid "Save your Student Portal account locally."
-msgstr "Lưu tài khoản Cổng thông tin sinh viên của bạn trên máy"
+msgstr "Lưu tài khoản Cổng thông tin sinh viên của bạn trên máy."
 
+#: src/schedule_cli/cli.py:144
 msgid "Your account has been saved!"
 msgstr "Tài khoản đã được thiết lập!"
 
+#: src/schedule_cli/cli.py:147
 msgid "View the table of the schedule."
 msgstr "Xem bảng thời khóa biểu."
 
+#: src/schedule_cli/cli.py:164
+#, python-format
+msgid "Found 1 entry - Displaying the table:"
+msgid_plural "Found %(count)d entries - Displaying the table:"
+msgstr[0] "Đã tìm thấy %(count)d lớp học - Hiển thị bảng:"
+
+#: src/schedule_cli/cli.py:172
+#, python-format
 msgid "Your schedule (%(start_date)s - %(end_date)s)"
 msgstr "Thời khóa biểu (%(start_date)s - %(end_date)s)"
 
+#: src/schedule_cli/cli.py:179
 msgid "Course"
 msgstr "Môn học"
 
+#: src/schedule_cli/cli.py:180
 msgid "Room"
 msgstr "Phòng"
 
+#: src/schedule_cli/cli.py:181
 msgid "Weekday"
 msgstr "Thứ"
 
+#: src/schedule_cli/cli.py:182
 msgid "Period"
 msgstr "Tiết bắt đầu"
 
+#: src/schedule_cli/cli.py:183
 msgid "Duration"
 msgstr "Số tiết"
 
+#: src/schedule_cli/cli.py:184
 msgid "Group"
 msgstr "Nhóm"
 
+#: src/schedule_cli/cli.py:185
 msgid "Sub group"
 msgstr "Tổ"
 
+#: src/schedule_cli/cli.py:186
 msgid "Is absent"
 msgstr "Báo vắng"
 
+#: src/schedule_cli/cli.py:204
 msgid "Export the schedule as JSON."
 msgstr "Xuất thời khóa biểu sang định dạng JSON."
 
+#: src/schedule_cli/cli.py:211
 msgid "The specified file path. Must be non-existing."
 msgstr "Đường dẫn tệp được chỉ định. Tệp không được phép tồn tại."
 
+#: src/schedule_cli/cli.py:226
+#, python-format
 msgid "Schedule has been fetched! Exporting to %(path)s..."
 msgstr "Thời khóa biểu đã được lấy! Đang xuất tới %(path)s..."
 
+#: src/schedule_cli/cli.py:232
 msgid "Exported successfully!"
 msgstr "Xuất thành công!"
 
+#: src/schedule_cli/cli.py:234
 msgid "Failed to export."
-msgstr "Có lỗi khi xuất"
+msgstr "Có lỗi khi xuất."

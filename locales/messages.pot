@@ -1,97 +1,162 @@
+# Translations template for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-08-19 19:40+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+#: src/schedule_cli/cli.py:28
 msgid "Your student ID."
 msgstr ""
 
+#: src/schedule_cli/cli.py:33
 msgid "Your password."
 msgstr ""
 
+#: src/schedule_cli/cli.py:38
 msgid "The semester ID."
 msgstr ""
 
+#: src/schedule_cli/cli.py:47
 msgid ""
 "Any date within the specified week (format: DD/MM/YYYY) - Defaults to "
 "today."
 msgstr ""
 
+#: src/schedule_cli/cli.py:58
+#, python-format
 msgid "No account is set - Please run `%(command)s` first!"
 msgstr ""
 
+#: src/schedule_cli/cli.py:82
 msgid "Using the provided account instead of local storage."
 msgstr ""
 
+#: src/schedule_cli/cli.py:90
+#, python-format
 msgid "Unknown semester ID: %(id)s - Use `%(command)s` to list all semesters."
 msgstr ""
 
+#: src/schedule_cli/cli.py:96
+#, python-format
 msgid "Found semester '%(name)s' - Fetching the schedule..."
 msgstr ""
 
+#: src/schedule_cli/cli.py:109
 msgid "Invalid student ID or password!"
 msgstr ""
 
+#: src/schedule_cli/cli.py:111
 msgid "Something went wrong."
 msgstr ""
 
+#: src/schedule_cli/cli.py:119
 msgid "Fetch all semesters."
 msgstr ""
 
+#: src/schedule_cli/cli.py:124
+#, python-format
 msgid "Found %(count)d semesters - Displaying the table:"
 msgstr ""
 
+#: src/schedule_cli/cli.py:128
 msgid "All semesters"
 msgstr ""
 
+#: src/schedule_cli/cli.py:129 src/schedule_cli/cli.py:178
 msgid "ID"
 msgstr ""
 
+#: src/schedule_cli/cli.py:130
 msgid "Name"
 msgstr ""
 
+#: src/schedule_cli/cli.py:138
 msgid "Save your Student Portal account locally."
 msgstr ""
 
+#: src/schedule_cli/cli.py:144
 msgid "Your account has been saved!"
 msgstr ""
 
+#: src/schedule_cli/cli.py:147
 msgid "View the table of the schedule."
 msgstr ""
 
+#: src/schedule_cli/cli.py:164
+#, python-format
+msgid "Found 1 entry - Displaying the table:"
+msgid_plural "Found %(count)d entries - Displaying the table:"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/schedule_cli/cli.py:172
+#, python-format
 msgid "Your schedule (%(start_date)s - %(end_date)s)"
 msgstr ""
 
+#: src/schedule_cli/cli.py:179
 msgid "Course"
 msgstr ""
 
+#: src/schedule_cli/cli.py:180
 msgid "Room"
 msgstr ""
 
+#: src/schedule_cli/cli.py:181
 msgid "Weekday"
 msgstr ""
 
+#: src/schedule_cli/cli.py:182
 msgid "Period"
 msgstr ""
 
+#: src/schedule_cli/cli.py:183
 msgid "Duration"
 msgstr ""
 
+#: src/schedule_cli/cli.py:184
 msgid "Group"
 msgstr ""
 
+#: src/schedule_cli/cli.py:185
 msgid "Sub group"
 msgstr ""
 
+#: src/schedule_cli/cli.py:186
 msgid "Is absent"
 msgstr ""
 
+#: src/schedule_cli/cli.py:204
 msgid "Export the schedule as JSON."
 msgstr ""
 
+#: src/schedule_cli/cli.py:211
 msgid "The specified file path. Must be non-existing."
 msgstr ""
 
+#: src/schedule_cli/cli.py:226
+#, python-format
 msgid "Schedule has been fetched! Exporting to %(path)s..."
 msgstr ""
 
+#: src/schedule_cli/cli.py:232
 msgid "Exported successfully!"
 msgstr ""
 
+#: src/schedule_cli/cli.py:234
 msgid "Failed to export."
 msgstr ""
+

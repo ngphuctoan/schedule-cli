@@ -1,5 +1,6 @@
 import json
 import locale
+import gettext
 import calendar
 from datetime import datetime
 
@@ -7,7 +8,6 @@ import click
 import keyring
 from rich.table import Table
 from rich.console import Console
-from babel.support import Translations
 
 from schedule_cli.logger import log
 from schedule_cli.modules.getters import (
@@ -18,17 +18,22 @@ from schedule_cli.modules.getters import (
 from schedule_cli.modules.models import Schedule, Semester
 from schedule_cli.modules.constants import DATE_FORMAT
 
-locale.setlocale(locale.LC_ALL, "vi_VN")
-
 SERVICE_NAME = "schedule-cli"
+
+# Uncomment to test app in Vietnamese.
+locale.setlocale(locale.LC_ALL, "vi_VN")
 
 console = Console()
 semester_getter = SemesterGetter()
 
-lang, _ = locale.getlocale()
-t = Translations.load(dirname="locales", locales=[lang])
+lang = locale.getlocale()[0]
+if lang is None:
+    lang = locale.getdefaultlocale()[0]
+
+t = gettext.translation(
+    domain="messages", localedir="locales", languages=[lang], fallback=True
+)
 _ = t.gettext
-__ = t.ngettext
 
 
 def credential_option_student_id(required: bool = True):
@@ -168,7 +173,7 @@ def view(
         return
 
     log.info(
-        __(
+        t.ngettext(
             "Found 1 entry - Displaying the table:",
             "Found %(count)d entries - Displaying the table:",
             n=len(schedule.entries),
