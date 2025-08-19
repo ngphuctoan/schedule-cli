@@ -1,4 +1,3 @@
-import locale
 import re
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
@@ -182,8 +181,6 @@ class WeeklyScheduleGetter(BaseScheduleGetter):
         return response, soup
 
     def _parse_entry(self, td: Tag, row: int, col: int) -> Entry:
-        lang, _ = locale.getlocale()
-
         raw_lines = td.decode_contents().split("<br/>")
         data = [Soup(line, "html.parser").text.strip() for line in raw_lines]
         match = re.match(
