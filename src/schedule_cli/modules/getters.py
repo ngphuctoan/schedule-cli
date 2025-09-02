@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Any
 
 import requests
 from requests import Response
@@ -21,25 +22,25 @@ class Auth:
     student_id: str
     password: str
 
-    def to_form_data(self) -> dict:
+    def to_form_data(self) -> dict[str, str]:
         return {"user": self.student_id, "pass": self.password}
 
 
 @dataclass
 class PostBackForm:
-    _viewstate: str = ""
-    _viewstategenerator: str = ""
+    viewstate: str = ""
+    viewstategenerator: str = ""
 
-    def to_form_data(self) -> dict:
+    def to_form_data(self) -> dict[str, Any]:
         return {
-            "__VIEWSTATE": self._viewstate,
-            "__VIEWSTATEGENERATOR": self._viewstategenerator,
+            "__VIEWSTATE": self.viewstate,
+            "__VIEWSTATEGENERATOR": self.viewstategenerator,
         }
 
 
 class BaseGetter(ABC):
     @abstractmethod
-    def get(self, *args, **kwargs) -> None:
+    def get(self, *args: Any, **kwargs: Any) -> Any:
         pass
 
 
@@ -47,7 +48,7 @@ class SemesterGetter(BaseGetter):
     API_URL = "https://thoikhoabieudukien.tdtu.edu.vn/API/XemKetQuaDangKy/LoadHocKy"
 
     def get(self) -> list[Semester]:
-        semesters = []
+        semesters: list[Semester] = []
 
         for semester_data in requests.get(self.API_URL).json():
             formatted_start_date = datetime.strptime(
@@ -92,11 +93,15 @@ class BaseScheduleGetter:
         return response, soup
 
     def _post_back(
-        self, url: str, event_target: str, params: dict, soup: Soup = None
+        self,
+        url: str,
+        event_target: str,
+        params: dict[str, str],
+        soup: Soup | None = None,
     ) -> tuple[Response, Soup]:
         if soup:
-            self.post_back_form._viewstate = soup.find(id="__VIEWSTATE")["value"]
-            self.post_back_form._viewstategenerator = soup.find(
+            self.post_back_form.viewstate = soup.find(id="__VIEWSTATE")["value"]
+            self.post_back_form.viewstategenerator = soup.find(
                 id="__VIEWSTATEGENERATOR"
             )["value"]
 
@@ -139,9 +144,10 @@ class WeeklyScheduleGetter(BaseScheduleGetter):
 
     def _parse_week_range(self, soup: Soup) -> tuple[datetime, datetime]:
         date_input = soup.find("input", id="ThoiKhoaBieu1_btnTuanHienTai")
-        date_values = date_input["value"].split(" - ")
-        return tuple(
-            datetime.strptime(date_value, DATE_FORMAT) for date_value in date_values
+        start, end = date_input["value"].split(" - ")
+        return (
+            datetime.strptime(start, DATE_FORMAT),
+            datetime.strptime(end, DATE_FORMAT),
         )
 
     def _calculate_week_presses(
@@ -214,7 +220,7 @@ class WeeklyScheduleGetter(BaseScheduleGetter):
 
         return entries
 
-    def get(self, semester: Semester, custom_date: datetime = None) -> Schedule:
+    def get(self, semester: Semester, custom_date: datetime | None = None) -> Schedule:
         if custom_date is None:
             custom_date = datetime.now()
 
