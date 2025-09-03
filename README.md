@@ -15,10 +15,10 @@ Download the `.whl` or `.tar.gz` package from the [Releases](https://github.com/
 Then install the file with `pip`:
 
 ```bash
-pip install ./schedule_cli-vX.Y.Z.whl
+pip install ./schedule_cli-X.Y.Z.whl
 ```
 
-Replace `v.X.Y.Z` with the tag you want (e.g. `v0.1.0`), and `.whl` with `.tar.gz` if you wish to use the archive.
+Replace `X.Y.Z` with the tag you want (e.g. `0.1.0`), and `.whl` with `.tar.gz` if you wish to use the archive.
 
 ## Development
 
