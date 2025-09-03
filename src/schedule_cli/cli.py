@@ -1,127 +1,137 @@
 import json
-import locale
 import gettext
 import calendar
-from datetime import datetime
+from typing import Any, Callable, ParamSpec, TypeVar
 
+import arrow
 import click
-import keyring
 from rich.table import Table
 from rich.console import Console
 
-from schedule_cli.logger import log
-from schedule_cli.modules.getters import (
-    SemesterGetter,
-    WeeklyScheduleGetter,
-    LogInError,
-)
-from schedule_cli.modules.models import Schedule, Semester
-from schedule_cli.modules.constants import DATE_FORMAT
+from .logger import log
+from .modules.constants import DATE_FORMAT
+from .modules.models import Schedule, Semester
+from .modules.getters import LogInError, SemesterGetter, WeeklyScheduleGetter
 
+
+# Keyring service name.
 SERVICE_NAME = "schedule-cli"
 
-# Uncomment to test app in Vietnamese.
-# locale.setlocale(locale.LC_ALL, "vi_VN")
+# Define generic params and return type.
+P = ParamSpec("P")
+R = TypeVar("R")
 
-console = Console()
-semester_getter = SemesterGetter()
-
-lang = locale.getlocale()[0]
-if lang is None:
-    lang = locale.getdefaultlocale()[0]
-
+# Prepare for translation.
 t = gettext.translation(
-    domain="messages", localedir="locales", languages=[lang], fallback=True
+    domain="messages", localedir="locales", fallback=True, languages=["en"]
 )
 _ = t.gettext
 
+# Prepare rich console.
+console = Console()
 
-def credential_option_student_id(required: bool = True):
-    return click.option(
-        "--student-id", "-i", required=required, help=_("Your student ID.")
-    )
-
-
-def credential_option_password(required: bool = True):
-    return click.option("--password", "-p", required=required, help=_("Your password."))
+# Initialise getters.
+semester_getter = SemesterGetter()
 
 
-def schedule_option_semester_id():
-    return click.option(
-        "--semester-id", "-s", required=True, help=_("The semester ID.")
-    )
+# Auth options decorator.
+def auth_options(f: Callable[P, R]) -> Callable[P, R]:
+    f = click.option(
+        "--password",
+        help=_("Your Student Portal's password."),
+        prompt=_("Emter your password"),
+        hide_input=True,
+    )(f)
+    f = click.option(
+        "--student-id",
+        help=_("Your Student Portal's ID."),
+        prompt=_("Enter your student ID"),
+    )(f)
+    return f
 
 
-def schedule_option_custom_date():
-    return click.option(
+# Custom click.ParamType for arrow dates.
+class ArrowParamType(click.ParamType):
+    name = "date"
+
+    def __init__(self, formats: str | list[str] = "YYYY-MM-DD") -> None:
+        if isinstance(formats, str):
+            self.formats = [formats]
+        else:
+            self.formats = formats
+
+    def convert(
+        self, value: Any, param: click.Parameter | None, ctx: click.Context | None
+    ) -> arrow.Arrow:
+        if isinstance(value, arrow.Arrow):
+            return value
+
+        for fmt in self.formats:
+            try:
+                return arrow.get(value, fmt)
+            except Exception:
+                continue
+
+        self.fail(
+            f"Invalid date: {value!r} (expected {', '.join(self.formats)})", param, ctx
+        )
+
+
+# Common schedule options decorator.
+def schedule_options(f: Callable[P, R]) -> Callable[P, R]:
+    f = click.option(
         "--custom-date",
-        "-d",
-        help=_(
-            "Any date within the specified week (format: DD/MM/YYYY) - Defaults to today."
-        ),
-    )
+        help=_("Any date in specified week (format: DD/MM/YYYY) - Defaults to today."),
+        type=ArrowParamType(formats=DATE_FORMAT),
+        default=arrow.now(),
+    )(f)
+    f = click.option(
+        "--general/--weekly",
+        help=_("Fetch general/weeky schedule - Defaults to weekly."),
+    )(f)
+    f = click.option(
+        "--semester-id", help=_("The semester ID."), type=int, required=True
+    )(f)
+    return f
 
 
-def get_credentials_from_keychain() -> tuple[str, str] | tuple[None, None]:
-    student_id = keyring.get_password(SERVICE_NAME, "student_id")
-    password = keyring.get_password(SERVICE_NAME, "password")
-
-    if student_id is None or password is None:
-        log.error(
-            _("No account is set - Please run `%(command)s` first!")
-            % {"command": "set-account"}
-        )
-        return None, None
-
-    return student_id, password
+# Fetch semester helper function based on the ID.
+def fetch_semester(semester_id: int) -> Semester:
+    for s in semester_getter.get():
+        if s.id_ == semester_id:
+            return s
+    raise ValueError(f"Unknown semester ID: {semester_id}")
 
 
-def find_semester(semester_id: str) -> Semester | None:
-    for semester in semester_getter.get():
-        if str(semester.id_) == semester_id:
-            return semester
-    return None
-
-
-def find_week_schedule(
-    semester_id: str,
-    custom_date: str | None,
-    student_id: str | None,
-    password: str | None,
+# Fetch schedule helper function.
+def fetch_schedule(
+    semester_id: int,
+    general: bool,
+    custom_date: arrow.Arrow,
+    student_id: str,
+    password: str,
 ) -> Schedule | None:
-    if student_id is None or password is None:
-        student_id, password = get_credentials_from_keychain()
-    else:
-        log.info(_("Using the provided account instead of local storage."))
-
-    if student_id is None or password is None:
-        return None
-
-    semester = find_semester(semester_id)
-    if semester is None:
-        log.error(
-            _("Unknown semester ID: %(id)s - Use `%(command)s` to list all semesters.")
-            % {"id": semester_id, "command": "fetch-semesters"}
-        )
-        return None
-
-    log.info(
-        _("Found semester '%(name)s' - Fetching the schedule...")
-        % {"name": str(semester)}
-    )
-    getter = WeeklyScheduleGetter(student_id, password)
-
-    if custom_date is not None:
-        formatted_date = datetime.strptime(custom_date, DATE_FORMAT)
-    else:
-        formatted_date = None
+    # TODO: Add support for general schedule.
+    if general:
+        log.warning("Work in progress!")
+        return
 
     try:
-        return getter.get(semester, formatted_date)
+        # Fetch semester info.
+        semester = fetch_semester(semester_id)
+
+        log.info(
+            _("Found semester '%(name)s' - Fetching the schedule...")
+            % {"name": str(semester)}
+        )
+
+        # Fetch the schedule.
+        getter = WeeklyScheduleGetter(student_id, password)
+        return getter.get(semester, custom_date.datetime)
     except LogInError:
-        log.error(_("Invalid student ID or password!"))
+        log.error(_("Incorrect student ID or password"))
     except Exception:
-        log.exception(_("Something went wrong."))
+        log.exception(_("Cannot fetch schedule"))
 
 
 @click.group()
@@ -129,6 +139,7 @@ def cli() -> None:
     pass
 
 
+# Fetch semesters command.
 @cli.command(help=_("Fetch all semesters."))
 def fetch_semesters() -> None:
     semesters = semester_getter.get()
@@ -148,44 +159,31 @@ def fetch_semesters() -> None:
     console.print(table)
 
 
-@cli.command(help=_("Save your Student Portal account locally."))
-@credential_option_student_id()
-@credential_option_password()
-def set_account(student_id: str, password: str) -> None:
-    keyring.set_password(SERVICE_NAME, "student_id", student_id)
-    keyring.set_password(SERVICE_NAME, "password", password)
-    log.info(_("Your account has been saved!"))
-
-
+# View schedule command.
 @cli.command(help=_("View the table of the schedule."))
-@schedule_option_semester_id()
-@schedule_option_custom_date()
-@credential_option_student_id(required=False)
-@credential_option_password(required=False)
+@schedule_options
+@auth_options
 def view(
-    semester_id: str,
-    custom_date: str | None,
-    student_id: str | None,
-    password: str | None,
+    semester_id: int,
+    general: bool,
+    custom_date: arrow.Arrow,
+    student_id: str,
+    password: str,
 ) -> None:
-    schedule = find_week_schedule(semester_id, custom_date, student_id, password)
+    schedule = fetch_schedule(semester_id, general, custom_date, student_id, password)
     if schedule is None:
         return
 
     log.info(
-        t.ngettext(
-            "Found 1 entry - Displaying the table:",
-            "Found %(count)d entries - Displaying the table:",
-            n=len(schedule.entries),
-        )
+        _("Found %(count)d classes - Displaying the table:")
         % {"count": len(schedule.entries)}
     )
 
     table = Table(
         title=_("Your schedule (%(start_date)s - %(end_date)s)")
         % {
-            "start_date": schedule.start_date.strftime(DATE_FORMAT),
-            "end_date": schedule.end_date.strftime(DATE_FORMAT),
+            "start_date": schedule.start_date.strftime("%d/%m/%Y"),
+            "end_date": schedule.end_date.strftime("%d/%m/%Y"),
         }
     )
     table.add_column(_("ID"))
@@ -201,7 +199,7 @@ def view(
     for e in schedule.entries:
         table.add_row(
             e.course_id,
-            e.course_name[lang.split("_")[0]],
+            e.course_name["en"],
             e.room,
             calendar.day_name[e.weekday],
             str(e.start_period),
@@ -214,29 +212,41 @@ def view(
     console.print(table)
 
 
+# Export schedule command.
 @cli.command(help=_("Export the schedule as JSON."))
-@schedule_option_semester_id()
-@schedule_option_custom_date()
+@schedule_options
+@auth_options
+@click.option(
+    "--ics/--json",
+    help=_("Whether to export as ICS or JSON. Defaults to ICS."),
+    default=True,
+)
 @click.option(
     "--output",
     "-o",
     required=True,
     help=_("The specified file path. Must be non-existing."),
 )
-@credential_option_student_id(required=False)
-@credential_option_password(required=False)
 def export(
+    ics: bool,
     output: str,
-    semester_id: str,
-    custom_date: str | None,
-    student_id: str | None,
-    password: str | None,
+    semester_id: int,
+    general: bool,
+    custom_date: arrow.Arrow,
+    student_id: str,
+    password: str,
 ) -> None:
-    schedule = find_week_schedule(semester_id, custom_date, student_id, password)
+    # TODO: Add ICS support.
+    if ics:
+        log.warning("Work in progress!")
+        return
+
+    schedule = fetch_schedule(semester_id, general, custom_date, student_id, password)
     if schedule is None:
         return
+
     log.info(
-        _("Schedule has been fetched! Exporting to %(path)s...") % {"path": output}
+        _("Schedule has been fetched! Exporting to '%(path)s'...") % {"path": output}
     )
 
     try:
@@ -245,7 +255,3 @@ def export(
             log.info(_("Exported successfully!"))
     except Exception:
         log.exception(_("Failed to export."))
-
-
-if __name__ == "__main__":
-    cli()
