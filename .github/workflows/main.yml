@@ -3,7 +3,11 @@ name: Build Releases
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        required: false
 
 jobs:
   build:
@@ -29,16 +33,10 @@ jobs:
       - name: Build package
         run: poetry build
 
-      - name: Release package on GitHub
+      - name: Release package on GitHub + Upload artifacts
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: softprops/action-gh-release@v2
-        with:
+          tag_name: ${{ github.events.inputs.version || github.ref_name }}
           files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

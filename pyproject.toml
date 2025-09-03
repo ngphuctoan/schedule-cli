@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "schedule-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "A command-line interface for TDTU students to view and export schedule"
 authors = ["Nguyễn Phúc Toàn <ngphuc_toan@tutanota.com>"]
 readme = "README.md"
